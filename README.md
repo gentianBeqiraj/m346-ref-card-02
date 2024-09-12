@@ -42,7 +42,23 @@ Die App kann nun im Browser unter der URL http://localhost:3000 betrachtet werde
 
 
 ### Inbetriebnahme mit Docker Container
-folgt...
+1. Dockerfile im Root vom Projekt mit folgender Konfiguration erstellen:
+   ![img.png](img.png)
 
 
+### GitHub Actions konfigurieren
+1. Erstelle ein .github/workflows/ci.yml file
+2. Auf docker.com ein Token generieren
+   ![img_1.png](img_1.png)
+3. Docker Hub Credentials als Secrets hinzufügen
+   ![img_2.png](img_2.png)
+4. Secrets in meinem GitHub Repository Settings erstellen.
+   ![img_3.png](img_3.png)
+5. Änderungen pushen
 
+### Schlussfolgerung
+Diese Pipeline automatisiert den Prozess des Builden, Testens und Deployen meiner React-App. 
+Sie kann weiter angepasst werden, um zusätzliche Schritte wie die Ausführung von Tests, das 
+Deployment auf einem Server oder die Verwendung von Caching einzubeziehen.
+![img_4.png](img_4.png)
+![img_5.png](img_5.png)
