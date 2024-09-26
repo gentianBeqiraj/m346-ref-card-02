@@ -13,6 +13,6 @@ jobs:
       - name: Build the Docker image
         run: docker build -t gentian2002/m346-ref-card-gentian-beqiraj .
       - name: Log in to Docker Hub
-        run: docker login -u gentian2002 -p  ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USERNAME -p  ${{ secrets.DOCKER_PASSWORD }}
       - name: Push the Docker image
         run: docker push gentian2002/m346-ref-card-gentian-beqiraj
