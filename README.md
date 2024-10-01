@@ -119,17 +119,21 @@ Container Registry (ECR) und EC2-Instanz.
    ![img_7.png](img_7.png)
 4. Repository wird nun erstellt.
    ![img_8.png](img_8.png)
+5. Die vollständige ECR URI ebenfalls als secret auf GitHub abspeichern.
 
-#### Job builden
+#### 3. Job erstellen
 - **Läuft auf**: `ubuntu-latest`
 - **Schritte**:
-   1. **Checkout Code**: Ruft den Code aus dem Repository ab.
-   2. **AWS-Credentials einrichten**: Konfiguriert AWS CLI mit den in GitHub Secrets gespeicherten Creditentials.
+   1. **Code auschecken**: Ruft den Code aus dem Repository ab.
+   2. **AWS-Credentials einrichten**: Konfiguriert AWS CLI mit den in GitHub Secrets gespeicherten Credentials.
    3. **Anmelden bei Amazon ECR**: Authentifiziert den Docker-Client gegenüber dem Amazon ECR-Service.
    4. **Docker-Image erstellen**: Erzeugt das Docker-Image aus der Dockerdatei im Repository.
    5. **Tag Docker Image**: Markiert das erstellte Docker-Image für ECR.
    6. **Docker-Image zu Amazon ECR pushen**: Pusht das getaggte Docker-Image zu ECR.
 - Danach wird es an ECR gesendet und sollte wie folgt aussehen:
+  ![img_17.png](img_17.png)
+  Siehe Konfiguration deploy.yml
+  
 
 #### 3. ECS-Cluster erstellen
 1. Suche in der AWS Konsole nach "ESC".
@@ -156,7 +160,47 @@ Container Registry (ECR) und EC2-Instanz.
 3. Service-Name geben.
    ![img_16.png](img_16.png)
 4. Auf erstellen klicken und überprüfen, ob die Applikation richtig läuft.
-   
+5. Überprüfe, ob alles funktioniert, sobald der Service läuft, indem du folgende Schritte unternimmst:
+   1. Gehe zu Cluster und wähle dein Cluster aus.
+   2. Klicke auf Aufgaben und wähle dann deine erstellte Aufgabe aus.
+   3. Gehe zu Netzwerke und klicke auf die öffentliche IP Adresse
+   ![img_18.png](img_18.png)
 
+#### 6. Job deployen
+`needs: build:`
+Gibt an, dass dieser Job von einem früheren Job namens `build` abhängt und erst nach dessen erfolgreichem Abschluss ausgeführt wird.
 
+`runs-on: ubuntu-latest:`
+Gibt an, dass der Job in der neuesten Version einer Ubuntu-Linux-Umgebung ausgeführt wird, die von GitHub Actions bereitgestellt wird.
 
+`steps::`
+Definiert die einzelnen Schritte, die in diesem Job ausgeführt werden.
+
+##### Schritt 1: AWS credentials für Session bereitstellen:
+- **`name:`** Einen für Menschen lesbarer Name für diesen Schritt, um dessen Zweck zu zeigen
+- **`env:`** Umgebungsvariablen setzen, welche im `run` Command verfügbar sind:
+    - **`AWS_ACCESS_KEY_ID:`** Der Access Key für deinen AWS account.
+    - **`AWS_SECRET_ACCESS_KEY:`** Der Secret Key für dein AWS account.
+    - **`AWS_SESSION_TOKEN:`** Ein Session Token für temporäre AWS credentials.
+    - **`AWS_DEFAULT_REGION:`** Die default region für AWS services.
+- **`run:`** Beinhaltet shell commands die den AWS CLI konfigurieren:
+    ```bash
+    aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    aws configure set aws_session_token $AWS_SESSION_TOKEN
+    aws configure set region $AWS_DEFAULT_REGION
+    ```
+  Dadurch wird die AWS CLI-Umgebung so eingerichtet, dass die angegebenen Anmeldeinformationen und 
+  die Region für nachfolgende Befehle verwendet werden.
+
+##### Schritt 2: ECS Services updaten
+- **`name:`** Ein von Menschen lesbarer Name.
+- **`run:`** Beinhaltet den Command um den ECS Service upzudaten:
+    ```bash
+    aws ecs update-service --cluster RefCard02 --service RefCard02-Service --task-definition refcard02
+    ```
+    Mit diesem Befehl soll der angegebene ECS-Service innerhalb des Clusters „RefCard02“ aktualisiert werden. 
+
+##### Schritt 3: Deployen
+1. Änderungen auf den Main-Branch pushen 
+2. Der Workflow wird automatisch ausgelöst, wobei das Docker-Image erstellt und in der EC2-Instanz bereitgestellt wird.
